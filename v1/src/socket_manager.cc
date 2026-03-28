@@ -26,11 +26,10 @@ void SocketManager::startServer()
     int opt = 1;
     setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    sockaddr_in server_addr{
-        .sin_family = AF_INET,           // IPv4
-        .sin_addr.s_addr = INADDR_ANY,   // Listen on all interfaces
-        .sin_port = htons(Configs::PORT) // Port number (convert to network byte order)
-    };
+    sockaddr_in server_addr{};
+    server_addr.sin_family = AF_INET;            // IPv4
+    server_addr.sin_addr.s_addr = INADDR_ANY;    // Listen on all interfaces
+    server_addr.sin_port = htons(Configs::PORT); // Port number (convert to network byte order)
 
     // 2. Bind the socket to an address and port
     if (bind(server_fd, (sockaddr *)&server_addr, sizeof(server_addr)) < 0)
