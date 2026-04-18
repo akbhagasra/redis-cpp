@@ -1,9 +1,6 @@
 #include "../include/store.h"
 #include "../include/logger.h"
 
-Store *Store::instance = nullptr;
-std::mutex Store::mtx;
-
 Store::Store()
 {
     startCleanup();
@@ -14,23 +11,10 @@ Store::~Store()
     stopCleanup();
 }
 
-Store *Store::getInstance()
+Store &Store::getInstance()
 {
-    if (!instance)
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-        if (!instance)
-            instance = new Store();
-    }
+    static Store instance;
     return instance;
-}
-
-void Store::destroyInstance()
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    if (instance)
-        delete instance;
-    instance = nullptr;
 }
 
 void Store::startCleanup()
@@ -50,7 +34,7 @@ void Store::cleanupLoop()
 {
     while (running)
     {
-        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::this_thread::sleep_for(std::chrono::seconds(Configs::CLEANUP_INTERVAL_SECS));
 
         std::lock_guard<std::mutex> lock(mtx);
         auto now = std::chrono::steady_clock::now();
@@ -69,10 +53,10 @@ void Store::cleanupLoop()
     }
 }
 
-int Store::set(const std::string &key, const std::string &value, int expiry_mins)
+int Store::set(const std::string &key, const std::string &value, int expiry_secs)
 {
     std::lock_guard<std::mutex> lock(mtx);
-    data[key] = {value, std::chrono::steady_clock::now() + std::chrono::minutes(expiry_mins)};
+    data[key] = {value, std::chrono::steady_clock::now() + std::chrono::seconds(expiry_secs)};
     return 1;
 }
 

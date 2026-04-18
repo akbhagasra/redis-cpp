@@ -36,9 +36,16 @@ private:
     static const char *levelToString(LogLevel level);
 };
 
+#ifdef RELEASE_MODE
+#define LOG_DEBUG(msg) ((void)0)
+#define LOG_INFO(msg) ((void)0)
+#define LOG_WARN(msg) ((void)0)
+#define LOG_ERROR(msg) ((void)0)
+#else
 #define LOG_DEBUG(msg) Logger::getInstance().debug(msg)
 #define LOG_INFO(msg) Logger::getInstance().info(msg)
 #define LOG_WARN(msg) Logger::getInstance().warn(msg)
 #define LOG_ERROR(msg) Logger::getInstance().error(msg)
+#endif
 
 #endif // LOGGER_H_

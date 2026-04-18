@@ -8,15 +8,19 @@
 #include <thread>
 #include <atomic>
 
+#include "configs.h"
+
 class Store
 {
 public:
-    static Store *getInstance();
-    static void destroyInstance();
+    static Store &getInstance();
 
-    int set(const std::string &key, const std::string &value, int expiry_mins = 1);
+    int set(const std::string &key, const std::string &value, int expiry_secs = Configs::DEFAULT_EXPIRY_SECS);
     std::string get(const std::string &key);
     int del(const std::string &key);
+
+    Store(const Store &) = delete;
+    Store &operator=(const Store &) = delete;
 
 private:
     struct Entry
@@ -25,9 +29,8 @@ private:
         std::chrono::steady_clock::time_point expiry;
     };
 
-    static std::mutex mtx;
+    std::mutex mtx;
     std::unordered_map<std::string, Entry> data;
-    static Store *instance;
 
     std::atomic<bool> running{false};
     std::thread cleanup_thread;

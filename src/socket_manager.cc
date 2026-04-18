@@ -6,12 +6,9 @@
 
 #include "../include/socket_manager.h"
 #include "../include/input_parser.h"
+#include "../include/command_handler.h"
 #include "../include/logger.h"
 #include "../include/configs.h"
-
-SocketManager::SocketManager() : store(Store::getInstance()) {}
-
-SocketManager::~SocketManager() { Store::destroyInstance(); }
 
 void SocketManager::startServer()
 {
@@ -65,55 +62,22 @@ void SocketManager::startServer()
 
 void SocketManager::handleClient(int client_fd)
 {
-    const char *welcome_msg = "Connected to Redis\r\n Supported commands: PING, SET, GET, DEL, QUIT\r\n";
-    write(client_fd, welcome_msg, strlen(welcome_msg));
-    char buf[1024];
+    CommandHandler handler;
+    char buf[Configs::CLIENT_BUFFER_SIZE];
     while (true)
     {
-        write(client_fd, ">", 1);
         ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
         if (n <= 0)
             break;
         buf[n] = '\0';
 
         Input input = InputParser::parse(buf);
-
-        switch (input.command)
+        CommandResult result = handler.execute(input);
+        write(client_fd, result.response.c_str(), result.response.size());
+        if (result.should_close)
         {
-        case CommandType::SET:
-            store->set(input.key, input.value);
-            write(client_fd, "+OK\r\n", 5);
-            break;
-        case CommandType::GET:
-        {
-            std::string value = store->get(input.key);
-            if (!value.empty())
-            {
-                std::string response = "+" + value + "\r\n";
-                write(client_fd, response.c_str(), response.size());
-            }
-            else
-            {
-                write(client_fd, "$-1\r\n", 5);
-            }
-            break;
-        }
-        case CommandType::DEL:
-            store->del(input.key);
-            write(client_fd, "+OK\r\n", 5);
-            break;
-        case CommandType::PING:
-            write(client_fd, "+PONG\r\n", 7);
-            break;
-        case CommandType::UNKNOWN:
-            write(client_fd, "-ERR unknown command\r\n", 22);
-            break;
-        case CommandType::QUIT:
-            write(client_fd, "+EXITING\r\n", 10);
             close(client_fd);
             return;
-        default:
-            break;
         }
     }
     LOG_INFO("Closing connection with client:: " + std::to_string(client_fd));

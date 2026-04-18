@@ -2,14 +2,14 @@
 #define INPUT_PARSER_H_
 
 #include <string>
+#include <vector>
 
 #include "enums.h"
 
 struct Input
 {
     CommandType command;
-    std::string key;
-    std::string value;
+    std::vector<std::string> args;
 };
 
 class InputParser
