@@ -109,5 +109,6 @@ GET: 234192.05 requests per second
 - **Event loop (epoll/kqueue)** - replace thread-per-connection with single-threaded event loop like official Redis for better scalability
 - **More data structures** - support Lists (`LPUSH`/`RPUSH`/`LRANGE`), Sets (`SADD`/`SMEMBERS`), Hashes (`HSET`/`HGET`), Sorted Sets (`ZADD`/`ZRANGE`)
 - **Async logger** - background writer thread with lock-free queue to eliminate logging overhead without stripping logs
+- **Pipeline support** - handle multiple RESP commands received in a single TCP read for compatibility with client libraries like `redis-py`
 - **Connection pooling** - limit max concurrent clients instead of unbounded thread spawning
 - **Config file** - load configs from a file instead of compile-time constants
